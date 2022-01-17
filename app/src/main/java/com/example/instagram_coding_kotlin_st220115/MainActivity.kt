@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -55,14 +56,18 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                 bundle.putString("destinationUid", uid)
                 userFragment.arguments = bundle
                 supportFragmentManager.beginTransaction()
-                    .replace(R.id.main_content, userFragment)
+                    .replace(R.id.main_content, userFra˚gment)
                     .commit()
                 return true
             }
         }
         return false
     }
-
+    fun setToolbarDefault() {
+        toolbar_title_image.visibility = View.VISIBLE
+        toolbar_btn_back.visibility = View.GONE
+        toolbar_username.visibility = View.GONE
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

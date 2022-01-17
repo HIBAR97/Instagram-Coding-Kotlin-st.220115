@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.PorterDuff
 import android.os.Bundle
+import android.provider.Settings.Global.getString
 import android.support.v4.app.ActivityCompat
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
@@ -29,6 +30,7 @@ import com.company.howl.howlstagram.model.AlarmDTO
 import com.company.howl.howlstagram.model.ContentDTO
 import com.company.howl.howlstagram.model.FollowDTO
 import com.company.howl.howlstagram.util.FcmPush
+import com.example.instagramcodingkotlin.MainActivity
 import com.example.instagramcodingkotlin.R
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -63,6 +65,36 @@ class UserFragment : Fragment() {
 
         fragmentView?.account_reyclerview?.adapter = UserFragmentRecyclerViewAdapter()
         fragmentView?.account_reyclerview?.layoutManger = GridLayoutManager(activity!!,3)
+
+        if (arguments != null) {
+
+            uid = arguments!!.getString("destinationUid")
+
+            // 본인 계정인 경우 -> 로그아웃, Toolbar 기본으로 설정
+            if (uid != null && uid == currentUserUid) {
+
+                fragmentView!!.account_btn_follow_signout.text = getString(R.string.signout)
+                fragmentView?.account_btn_follow_signout?.setOnClickListener {
+                    startActivity(Intent(activity, LoginActivity::class.java))
+                    activity?.finish()
+                    auth?.signOut()
+                }
+            } else {
+                fragmentView!!.account_btn_follow_signout.text = getString(R.string.follow)
+                //view.account_btn_follow_signout.setOnClickListener{ requestFollow() }
+                var mainActivity = (activity as MainActivity)
+                mainActivity.toolbar_title_image.visibility = View.GONE
+                mainActivity.toolbar_btn_back.visibility = View.VISIBLE
+                mainActivity.toolbar_username.visibility = View.VISIBLE
+
+                mainActivity.toolbar_username.text = arguments!!.getString("userId")
+
+                mainActivity.toolbar_btn_back.setOnClickListener { mainActivity.bottom_navigation.selectedItemId = R.id.action_home }
+
+                fragmentView?.account_btn_follow_signout?.setOnClickListener {
+                    requestFollow()
+                }
+            }
 
         }
 

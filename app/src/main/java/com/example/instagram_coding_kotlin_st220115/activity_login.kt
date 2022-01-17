@@ -24,6 +24,7 @@ import android.content.pm.PackageInfo
  import android.net.Uri.encode
  import android.util.Base64.encode
  import android.util.Log
+ import com.example.instagramcodingkotlin.R
  import com.facebook.AccessToken
  import com.facebook.CallbackManager
  import com.facebook.FacebookCallback
@@ -176,5 +177,10 @@ import android.content.pm.PackageInfo
              startActivity(Intent(this, MainActivity::class.java))
              finish()
          }
+     }
+     override fun onStart() {
+         super.onStart()
+
+
      }
  }
