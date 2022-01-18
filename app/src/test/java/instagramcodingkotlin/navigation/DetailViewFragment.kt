@@ -70,6 +70,7 @@ class DetailViewFragment : Fragment() {
                 contentDTOs.clear()
                 contentUidList.clear()
                 if (querySnapshot == null) return@addSnapshotListener
+
                 for (snapshot in querySnapshot!!.documents) {
                     var item = snapshot.toObject(ContentDTO::class.java)!!
                     println(item.uid)

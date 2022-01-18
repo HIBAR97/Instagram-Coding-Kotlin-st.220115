@@ -50,7 +50,9 @@ class UserFragment : Fragment() {
     var uid: String? = null
     var currentUserUid: String? = null
     var fragmentView: View? = null
-
+    companion object{
+        var PICK_PROFILE_FROM_ALBUM = 10
+    }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?) {
 
@@ -97,6 +99,25 @@ class UserFragment : Fragment() {
             }
 
         }
+        // Profile Image Click Listener
+        fragmentView?.account_iv_profile?.setOnClickListener {
+            if (ContextCompat.checkSelfPermission(activity!!, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+
+                //앨범 오픈
+                var photoPickerIntent = Intent(Intent.ACTION_PICK)
+                photoPickerIntent.type = "image/*"
+                activity!!.startActivityForResult(photoPickerIntent, PICK_PROFILE_FROM_ALBUM)
+            }
+        }
+        getFollowing()
+        getFollower()
+        fragmentView?.account_recyclerview?.layoutManager = GridLayoutManager(activity!!, 3)
+        fragmentView?.account_recyclerview?.adapter = UserFragmentRecyclerViewAdapter()
+
+        return fragmentView
+    }
+
+
 
     inner class UserFragmentRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
@@ -113,10 +134,108 @@ class UserFragment : Fragment() {
                 for (snapshot in querySnapshot?.documents!!) {
                     contentDTOs.add(snapshot.toObject(ContentDTO::class.java)!!)
                 }
-
+                getProfileImage()
+                getFollowerAndFollowing()
                 fragmentView?.account_tv_post_count.text = contentDTOs.size.toString()
                 notifyDataSetChanged()
             }
+
+        }
+
+        fun getFollowerAndFollowing{
+            firestore?.collection("users")?.document(uid!!).addSnapshotListener{documentSnapshot,firebaseFirestoreException ->
+                if(documentSnapshot == null) return@addSnapshotListener
+                var followDTO = documentSnapshot.toObject(FollowDTO::class.java)
+                if(FollowDTO?.followingCount !=null){
+                    fragmentView?.account_tv_following_count?.text = followDTO?.followingCount?.toString()
+                }
+                if(FollowDTO?.followerCount !=null){
+                    fragmentView?.account_tv_following_count?.text = followDTO?.followerCount?.toString()
+                    if(followDTO?.followers?.containsKey(currentUserUid!!)){
+                        fragmentView?.account_btn_follow_signout?.text = getString(R.string.follow_cancel)
+                        fragmentView?.account_btn_follow_signout?.background?.setColorFilter(ContextCompag.getcolor(activity!!,R.color.coloerLightGray),porterDuff.Mode.MULTIPLY)
+
+                    }else{
+                        fragmentView?.account_btn_follow_signout?.text = getString(R.string.follow_cancel)
+                    }
+                }
+            }
+        }
+
+         fun requstFollow() {
+            var tsDocFollowing = firestore!!.collection("users").document(currentUserUid!!)
+            firestore?.runTransaction { transaction ->
+
+                var followDTO = transaction.get(tsDocFollowing).toObject(FollowDTO::class.java)
+                if (followDTO == null) {
+
+                    followDTO = FollowDTO()
+                    followDTO.followingCount = 1
+                    followDTO.followings[uid!!] = true
+
+                    transaction.set(tsDocFollowing, followDTO)
+                    return@runTransaction
+
+                }
+                // Unstar the post and remove self from stars
+                if (followDTO?.followings?.containsKey(uid)!!) {
+
+                    followDTO?.followingCount = followDTO?.followingCount - 1
+                    followDTO?.followings.remove(uid)
+                } else {
+
+                    followDTO?.followingCount = followDTO?.followingCount + 1
+                    followDTO?.followings[uid!!] = true
+                    followerAlarm(uid!!)
+                }
+                transaction.set(tsDocFollowing, followDTO)
+                return@runTransaction
+            }
+
+            var tsDocFollower = firestore!!.collection("users").document(uid!!)
+            firestore?.runTransaction { transaction ->
+
+                var followDTO = transaction.get(tsDocFollower).toObject(FollowDTO::class.java)
+                if (followDTO == null) {
+
+                    followDTO = FollowDTO()
+                    followDTO!!.followerCount = 1
+                    followDTO!!.followers[currentUserUid!!] = true
+
+
+                    transaction.set(tsDocFollower, followDTO!!)
+                    return@runTransaction
+                }
+
+                if (followDTO?.followers?.containsKey(currentUserUid!!)!!) {
+
+
+                    followDTO!!.followerCount = followDTO!!.followerCount - 1
+                    followDTO!!.followers.remove(currentUserUid!!)
+                } else {
+
+                    followDTO!!.followerCount = followDTO!!.followerCount + 1
+                    followDTO!!.followers[currentUserUid!!] = true
+
+                }// Star the post and add self to stars
+
+                transaction.set(tsDocFollower, followDTO!!)
+                return@runTransaction
+            }
+
+        }
+
+        fun getProfileImage() {
+            imageprofileListenerRegistration = firestore?.collection("profileImages")?.document(uid!!)
+                ?.addSnapshotListener { documentSnapshot, firebaseFirestoreException ->
+
+                    if (documentSnapshot?.data != null) {
+                        val url = documentSnapshot?.data!!["image"]
+                        Glide.with(activity)
+                            .load(url)
+                            .apply(RequestOptions().circleCrop()).into(fragmentView!!.account_iv_profile)
+                    }
+                }
 
         }
 

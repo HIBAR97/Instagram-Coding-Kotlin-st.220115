@@ -78,6 +78,31 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         R.menu.bottom_navigation_main.selectedItemId = R.id.action_home
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+
+        // 앨범에서 Profile Image 사진 선택시 호출 되는 부분분
+        if (requestCode == PICK_PROFILE_FROM_ALBUM && resultCode == Activity.RESULT_OK) {
+
+            var imageUri = data?.data
+
+
+            val uid = FirebaseAuth.getInstance().currentUser!!.uid //파일 업로드
+            //사진을 업로드 하는 부분  userProfileImages 폴더에 uid에 파일을 업로드함
+            FirebaseStorage
+                .getInstance()
+                .reference
+                .child("userProfileImages")
+                .child(uid)
+                .putFile(imageUri!!)
+                .addOnCompleteListener { task ->
+                    val url = task.result.downloadUrl.toString()
+                    val map = HashMap<String, Any>()
+                    map["image"] = url
+                    FirebaseFirestore.getInstance().collection("profileImages").document(uid).set(map)
+                }
+        }
+
+    }
 
 }
 
