@@ -61,13 +61,26 @@ class CommentActivity : AppCompatActivity() {
             comment_edit_message.setText("")
 
         }
-
         comment_recyclerview.adapter = CommentRecyclerViewAdapter()
         comment_recyclerview.layoutManager = LinearLayoutManager(this)
 
     }
 
+    fun commentAlarm(destinationUid: String, message: String) {
 
+        val alarmDTO = AlarmDTO()
+        alarmDTO.destinationUid = destinationUid
+        alarmDTO.userId = user?.email
+        alarmDTO.uid = user?.uid
+        alarmDTO.kind = 1
+        alarmDTO.message = message
+        alarmDTO.timestamp = System.currentTimeMillis()
+
+        FirebaseFirestore.getInstance().collection("alarms").document().set(alarmDTO)
+
+        var message = user?.email + getString(R.string.alarm_who) + message + getString(R.string.alarm_comment)
+        fcmPush?.sendMessage(destinationUid, "알림 메세지 입니다.", message)
+    }
 
     inner class CommentRecyclerViewAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         var comments: ArrayList<ContentDTO.Comment>

@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.company.howl.howlstagram.model.AlarmDTO
 import com.company.howl.howlstagram.model.ContentDTO
 import com.company.howl.howlstagram.model.FollowDTO
 import com.example.instagramcodingkotlin.R
@@ -154,6 +155,7 @@ class DetailViewFragment : Fragment() {
                 v ->
                 var intent = Intent(v.context,CommentActivity::class.java)
                 intent.putExtra("contentUid",contentUidList[p1])
+                intent.putExtra("destinationUid",contentUidList[p1].uid)
                 startActivity(intent)
             }
         }
@@ -176,12 +178,31 @@ class DetailViewFragment : Fragment() {
                     // Star the post and add self to stars
                     contentDTO?.favoriteCount = contentDTO?.favoriteCount!! + 1
                     contentDTO?.favorites[uid] = true
+                    favoriteAlarm(contentDTOs[position].uid!!)
                 }
                 transaction.set(tsDoc, contentDTO)
             }
         }
 
+        fun favoriteAlarm(destinationUid: String) {
 
+            val alarmDTO = AlarmDTO()
+            alarmDTO.destinationUid = destinationUid
+            alarmDTO.userId = user?.email
+            alarmDTO.uid = user?.uid
+            alarmDTO.kind = 0
+            alarmDTO.timestamp = System.currentTimeMillis()
+
+            FirebaseFirestore.getInstance().collection("alarms").document().set(alarmDTO)
+            var message = user?.email + getString(R.string.alarm_favorite)
+            fcmPush?.sendMessage(destinationUid, "알림 메세지 입니다.", message)
+        }
+
+        override fun getItemCount(): Int {
+
+            return contentDTOs.size
+
+        }
     }
 
     inner class CustomViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)

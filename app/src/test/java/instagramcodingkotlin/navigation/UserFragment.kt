@@ -201,6 +201,7 @@ class UserFragment : Fragment() {
                     followDTO = FollowDTO()
                     followDTO!!.followerCount = 1
                     followDTO!!.followers[currentUserUid!!] = true
+                    followerAlarm(uid!!)
 
 
                     transaction.set(tsDocFollower, followDTO!!)
@@ -216,6 +217,7 @@ class UserFragment : Fragment() {
 
                     followDTO!!.followerCount = followDTO!!.followerCount + 1
                     followDTO!!.followers[currentUserUid!!] = true
+                    followerAlarm(uid!!)
 
                 }// Star the post and add self to stars
 
@@ -224,6 +226,21 @@ class UserFragment : Fragment() {
             }
 
         }
+
+        fun followerAlarm(destinationUid: String) {
+
+            val alarmDTO = AlarmDTO()
+            alarmDTO.destinationUid = destinationUid
+            alarmDTO.userId = auth?.currentUser!!.email
+            alarmDTO.uid = auth?.currentUser!!.uid
+            alarmDTO.kind = 2
+            alarmDTO.timestamp = System.currentTimeMillis()
+
+            FirebaseFirestore.getInstance().collection("alarms").document().set(alarmDTO)
+            var message = auth?.currentUser!!.email + getString(R.string.alarm_follow)
+            fcmPush?.sendMessage(destinationUid, "알림 메세지 입니다.", message)
+        }
+
 
         fun getProfileImage() {
             imageprofileListenerRegistration = firestore?.collection("profileImages")?.document(uid!!)
