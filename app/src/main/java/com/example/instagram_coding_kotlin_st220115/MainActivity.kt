@@ -101,7 +101,14 @@ class MainActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
                     FirebaseFirestore.getInstance().collection("profileImages").document(uid).set(map)
                 }
         }
+        fun registerPushToken(){
+            var pushToken = FirebaseInstanceId.getInstance().token
+            var uid = FirebaseAuth.getInstance().currentUser?.uid
+            var map = mutableMapOf<String,Any>()
+            map["pushtoken"] = pushToken!!
 
+            FirebaseFirestore.getInstance().collection("pushtokens").document(uid!!).set(map)
+        }
     }
 
 }
