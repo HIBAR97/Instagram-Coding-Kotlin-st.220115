@@ -1,4 +1,4 @@
-package com.company.howl.howlstagram.model
+package instagramcodingkotlin.navigation.model
 
 data class AlarmDTO (
     var destinationUid: String? = null,

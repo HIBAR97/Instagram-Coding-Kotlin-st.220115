@@ -1,4 +1,4 @@
-package com.company.howl.howlstagram.navigation
+package instagramcodingkotlin.navigation.model
 
 import android.Manifest
 import android.content.Intent
